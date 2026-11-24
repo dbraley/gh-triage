@@ -1,0 +1,127 @@
+{
+  "fetchedAt": "2026-11-18T17:00:00Z",
+  "viewer": "me",
+  "viewerTeams": [
+    "org-1/team-1"
+  ],
+  "node": {
+    "id": "PR_102",
+    "number": 102,
+    "title": "Synthetic: failed run superseded by a green rerun; skipped/neutral required checks",
+    "url": "https://github.com/org-1/repo-1/pull/102",
+    "isDraft": false,
+    "createdAt": "2026-11-13T14:00:00Z",
+    "repository": {
+      "nameWithOwner": "org-1/repo-1",
+      "isArchived": false,
+      "owner": {
+        "login": "org-1"
+      }
+    },
+    "author": {
+      "__typename": "User",
+      "login": "me"
+    },
+    "reviewDecision": "APPROVED",
+    "mergeable": "MERGEABLE",
+    "mergeStateStatus": "CLEAN",
+    "isInMergeQueue": false,
+    "isMergeQueueEnabled": true,
+    "mergeQueueEntry": null,
+    "autoMergeRequest": null,
+    "commits": {
+      "nodes": [
+        {
+          "commit": {
+            "oid": "aaa111",
+            "committedDate": "2026-11-16T15:00:00Z",
+            "statusCheckRollup": {
+              "state": "SUCCESS",
+              "contexts": {
+                "totalCount": 5,
+                "nodes": [
+                  {
+                    "__typename": "CheckRun",
+                    "name": "build",
+                    "status": "COMPLETED",
+                    "isRequired": true,
+                    "conclusion": "FAILURE",
+                    "startedAt": "2026-11-17T10:00:00Z"
+                  },
+                  {
+                    "__typename": "CheckRun",
+                    "name": "build",
+                    "status": "COMPLETED",
+                    "isRequired": true,
+                    "conclusion": "SUCCESS",
+                    "startedAt": "2026-11-17T11:00:00Z"
+                  },
+                  {
+                    "__typename": "CheckRun",
+                    "name": "deploy-preview",
+                    "status": "COMPLETED",
+                    "isRequired": true,
+                    "conclusion": "SKIPPED"
+                  },
+                  {
+                    "__typename": "CheckRun",
+                    "name": "lint",
+                    "status": "COMPLETED",
+                    "isRequired": true,
+                    "conclusion": "NEUTRAL"
+                  },
+                  {
+                    "__typename": "CheckRun",
+                    "name": "flaky-e2e",
+                    "status": "COMPLETED",
+                    "isRequired": false,
+                    "conclusion": "FAILURE"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "latestOpinionatedReviews": {
+      "nodes": [
+        {
+          "author": {
+            "__typename": "User",
+            "login": "user-2"
+          },
+          "state": "APPROVED",
+          "submittedAt": "2026-11-17T12:00:00Z",
+          "commit": {
+            "oid": "aaa111"
+          }
+        }
+      ]
+    },
+    "latestReviews": {
+      "nodes": [
+        {
+          "author": {
+            "__typename": "User",
+            "login": "user-2"
+          },
+          "state": "APPROVED",
+          "submittedAt": "2026-11-17T12:00:00Z",
+          "commit": {
+            "oid": "aaa111"
+          }
+        }
+      ]
+    },
+    "reviewRequests": {
+      "nodes": []
+    },
+    "reviewThreads": {
+      "nodes": []
+    },
+    "timelineItems": {
+      "nodes": []
+    }
+  }
+}

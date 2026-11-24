@@ -1,0 +1,104 @@
+{
+  "fetchedAt": "2026-11-18T17:00:00Z",
+  "viewer": "me",
+  "viewerTeams": [
+    "org-1/team-1"
+  ],
+  "node": {
+    "id": "PR_120",
+    "number": 120,
+    "title": "Synthetic: update dependency other-dep to v2",
+    "url": "https://github.com/org-1/repo-1/pull/120",
+    "isDraft": false,
+    "createdAt": "2026-11-13T14:00:00Z",
+    "repository": {
+      "nameWithOwner": "org-1/repo-1",
+      "isArchived": false,
+      "owner": {
+        "login": "org-1"
+      }
+    },
+    "author": {
+      "__typename": "Bot",
+      "login": "renovate"
+    },
+    "reviewDecision": "APPROVED",
+    "mergeable": "MERGEABLE",
+    "mergeStateStatus": "CLEAN",
+    "isInMergeQueue": false,
+    "isMergeQueueEnabled": false,
+    "mergeQueueEntry": null,
+    "autoMergeRequest": null,
+    "commits": {
+      "nodes": [
+        {
+          "commit": {
+            "oid": "aaa111",
+            "committedDate": "2026-11-16T15:00:00Z",
+            "statusCheckRollup": {
+              "state": "SUCCESS",
+              "contexts": {
+                "totalCount": 2,
+                "nodes": [
+                  {
+                    "__typename": "CheckRun",
+                    "name": "build",
+                    "status": "COMPLETED",
+                    "isRequired": true,
+                    "conclusion": "SUCCESS"
+                  },
+                  {
+                    "__typename": "CheckRun",
+                    "name": "test",
+                    "status": "COMPLETED",
+                    "isRequired": true,
+                    "conclusion": "SUCCESS"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "latestOpinionatedReviews": {
+      "nodes": [
+        {
+          "author": {
+            "__typename": "User",
+            "login": "me"
+          },
+          "state": "APPROVED",
+          "submittedAt": "2026-11-17T12:00:00Z",
+          "commit": {
+            "oid": "aaa111"
+          }
+        }
+      ]
+    },
+    "latestReviews": {
+      "nodes": [
+        {
+          "author": {
+            "__typename": "User",
+            "login": "me"
+          },
+          "state": "APPROVED",
+          "submittedAt": "2026-11-17T12:00:00Z",
+          "commit": {
+            "oid": "aaa111"
+          }
+        }
+      ]
+    },
+    "reviewRequests": {
+      "nodes": []
+    },
+    "reviewThreads": {
+      "nodes": []
+    },
+    "timelineItems": {
+      "nodes": []
+    }
+  }
+}

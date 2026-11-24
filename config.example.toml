@@ -1,0 +1,47 @@
+# Copy to config.toml (gitignored) or ~/.config/gh-triage/config.toml.
+# Every setting is optional; the values shown are the defaults unless noted.
+
+# Your GitHub login. Default: whoever `gh` is logged in as.
+# login = "octocat"
+
+# Teams whose review requests count as "team" requests, as "org/slug".
+# Default: every team you belong to (needs the read:org scope).
+# teams = ["Khan/infrastructure"]
+
+# Scope is every open PR you are involved in, minus these. "*" is a wildcard.
+# Archived repos are always skipped.
+exclude_repos = []   # e.g. ["Khan/archived-*", "someone/fork-i-ignore"]
+exclude_orgs = []    # e.g. ["old-employer"]
+
+# true: a request to one of your teams lands in REVIEW REQUESTED.
+# false: it lands in the lower-priority TEAM REVIEW bucket.
+team_requests_are_mine = false
+
+[idle]
+# Business days (weekends don't count) someone must hold a PR before they
+# appear on the poke list.
+poke_after_business_days = 1
+# Review requests and pokes idle this long are marked STALE.
+stale_after_business_days = 3
+
+[checks]
+# In a repo with no required checks, treat every check as required so a red
+# build is not invisible. Has no effect where branch protection marks checks
+# as required.
+all_when_none_required = true
+
+[bots]
+# Expand the Automated section by default (same as --show-bots).
+show = false
+
+# Extra bot detection, matched against the PR author's login before the
+# built-ins (dependabot*, renovate*, github-actions*, *[bot], and anything
+# GitHub itself reports as a Bot). `label` is what the report calls it.
+# [[bots.patterns]]
+# pattern = "khan-release-*"
+# label = "Release bot"
+
+[slack.handles]
+# GitHub login (or "org/team") -> Slack handle, for the paste-ready nudges.
+# octocat = "mona"
+# "Khan/infrastructure" = "infra-team"

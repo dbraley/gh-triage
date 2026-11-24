@@ -1,0 +1,22 @@
+name: release
+
+# Push a tag like v0.1.0 to publish binaries that
+# `gh extension install dbraley/gh-triage` can download.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cli/gh-extension-precompile@v2
+        with:
+          go_version_file: go.mod
+          generate_attestations: true

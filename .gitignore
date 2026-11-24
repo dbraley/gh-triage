@@ -1,0 +1,7 @@
+# Real PR data and personal config are private.
+config.toml
+testdata/local/
+
+# Build output
+/gh-triage
+/dist/

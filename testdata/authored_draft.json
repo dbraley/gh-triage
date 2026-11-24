@@ -1,0 +1,80 @@
+{
+  "fetchedAt": "2026-11-18T17:00:00Z",
+  "viewer": "me",
+  "viewerTeams": [
+    "org-1/team-1"
+  ],
+  "node": {
+    "id": "PR_110",
+    "number": 110,
+    "title": "Synthetic: draft, green, nobody asked",
+    "url": "https://github.com/org-1/repo-1/pull/110",
+    "isDraft": true,
+    "createdAt": "2026-11-13T14:00:00Z",
+    "repository": {
+      "nameWithOwner": "org-1/repo-1",
+      "isArchived": false,
+      "owner": {
+        "login": "org-1"
+      }
+    },
+    "author": {
+      "__typename": "User",
+      "login": "me"
+    },
+    "reviewDecision": "REVIEW_REQUIRED",
+    "mergeable": "MERGEABLE",
+    "mergeStateStatus": "BLOCKED",
+    "isInMergeQueue": false,
+    "isMergeQueueEnabled": true,
+    "mergeQueueEntry": null,
+    "autoMergeRequest": null,
+    "commits": {
+      "nodes": [
+        {
+          "commit": {
+            "oid": "aaa111",
+            "committedDate": "2026-11-16T15:00:00Z",
+            "statusCheckRollup": {
+              "state": "SUCCESS",
+              "contexts": {
+                "totalCount": 2,
+                "nodes": [
+                  {
+                    "__typename": "CheckRun",
+                    "name": "build",
+                    "status": "COMPLETED",
+                    "isRequired": true,
+                    "conclusion": "SUCCESS"
+                  },
+                  {
+                    "__typename": "CheckRun",
+                    "name": "test",
+                    "status": "COMPLETED",
+                    "isRequired": true,
+                    "conclusion": "SUCCESS"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "latestOpinionatedReviews": {
+      "nodes": []
+    },
+    "latestReviews": {
+      "nodes": []
+    },
+    "reviewRequests": {
+      "nodes": []
+    },
+    "reviewThreads": {
+      "nodes": []
+    },
+    "timelineItems": {
+      "nodes": []
+    }
+  }
+}
