@@ -18,6 +18,13 @@ func TestScrubRemovesPrivateNames(t *testing.T) {
 	    "commits": {"nodes": [{"commit": {"oid": "deadbeefcafe", "statusCheckRollup": {"contexts": {"nodes": [
 	      {"__typename": "CheckRun", "name": "hush-build", "status": "COMPLETED", "conclusion": "SUCCESS", "isRequired": true}]}}}}]},
 	    "latestReviews": {"nodes": [{"author": {"login": "alice"}, "state": "COMMENTED", "commit": {"oid": "deadbeefcafe"}}]},
+	    "comments": {"nodes": [
+	      {"author": {"__typename": "User", "login": "RealMe"}, "createdAt": "2026-11-17T10:00:00Z"},
+	      {"author": {"__typename": "User", "login": "zed"}, "createdAt": "2026-11-17T11:00:00Z"},
+	      {"author": {"__typename": "Bot", "login": "github-actions"}, "createdAt": "2026-11-17T12:00:00Z"}]},
+	    "reviews": {"nodes": [
+	      {"author": {"__typename": "User", "login": "Zed"}, "state": "APPROVED", "submittedAt": "2026-11-17T13:00:00Z", "commit": {"oid": "feedfacebabe"}},
+	      {"author": {"__typename": "User", "login": "alice"}, "state": "COMMENTED", "submittedAt": "2026-11-17T14:00:00Z", "commit": {"oid": "deadbeefcafe"}}]},
 	    "reviewRequests": {"nodes": [
 	      {"requestedReviewer": {"__typename": "Team", "slug": "platform", "organization": {"login": "SecretOrg"}}},
 	      {"requestedReviewer": {"__typename": "User", "login": "alice"}},
@@ -32,7 +39,7 @@ func TestScrubRemovesPrivateNames(t *testing.T) {
 	}
 	s := Scrub(f)
 	out, _ := json.Marshal(s)
-	for _, private := range []string{"realme", "secretorg", "hush", "platform", "alice", "secret-sauce", "4242", "deadbeef", "never"} {
+	for _, private := range []string{"realme", "secretorg", "hush", "platform", "alice", "secret-sauce", "4242", "deadbeef", "feedface", "zed", "never"} {
 		if strings.Contains(strings.ToLower(string(out)), private) {
 			t.Errorf("scrubbed output still contains %q:\n%s", private, out)
 		}
@@ -52,6 +59,16 @@ func TestScrubRemovesPrivateNames(t *testing.T) {
 	}
 	if n.ReviewRequests.Nodes[2].RequestedReviewer.Login != "dependabot" {
 		t.Error("public bot login should be kept")
+	}
+	if cs := n.Comments.Nodes; cs[0].Author.Login != "me" || cs[1].Author.Login == "zed" || cs[2].Author.Login != "github-actions" {
+		t.Errorf("comment authors = %q, %q, %q", cs[0].Author.Login, cs[1].Author.Login, cs[2].Author.Login)
+	}
+	rv := n.Reviews.Nodes
+	if rv[0].Author.Login != n.Comments.Nodes[1].Author.Login {
+		t.Error("one login mapped to different placeholders across comments and reviews")
+	}
+	if rv[1].Author.Login != alice || rv[1].CommitOID() != n.Head().OID || rv[0].CommitOID() == n.Head().OID {
+		t.Errorf("review authors/oids not consistently scrubbed: %+v", rv)
 	}
 	if n.Head().OID != n.LatestReviews.Nodes[0].CommitOID() {
 		t.Error("commit ids no longer line up")

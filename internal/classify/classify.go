@@ -217,20 +217,24 @@ func (c *classifier) authored() {
 
 	// 1. ACT NOW: anything only the author can fix.
 	var act []string
+	addAct := func(cause, why string) {
+		act = append(act, why)
+		c.r.Causes = append(c.r.Causes, cause)
+	}
 	if len(c.ci.failed) > 0 {
-		act = append(act, "required check failed: "+strings.Join(c.ci.failed, ", "))
+		addAct(CauseChecksFailed, "required check failed: "+strings.Join(c.ci.failed, ", "))
 	}
 	if c.conflict {
-		act = append(act, "merge conflict with the base branch")
+		addAct(CauseConflict, "merge conflict with the base branch")
 	}
 	if len(c.changesOnHead) > 0 {
-		act = append(act, "changes requested by "+strings.Join(c.changesOnHead, ", ")+" on the current commit")
+		addAct(CauseChangesRequested, "changes requested by "+strings.Join(c.changesOnHead, ", ")+" on the current commit")
 	}
 	if n, who := c.threadsNeedingAuthor(); n > 0 {
-		act = append(act, fmt.Sprintf("%d unresolved thread%s with activity since your last push (%s)", n, plural(n), strings.Join(who, ", ")))
+		addAct(CauseThreads, fmt.Sprintf("%d unresolved thread%s with activity since your last push (%s)", n, plural(n), strings.Join(who, ", ")))
 	}
 	if why := c.kickedFromQueue(); why != "" {
-		act = append(act, why)
+		addAct(CauseEjected, why)
 	}
 	if len(act) > 0 {
 		c.set(ActNow, "%s", strings.Join(act, "; "))
@@ -250,6 +254,7 @@ func (c *classifier) authored() {
 	// 3. READY TO ENQUEUE.
 	if c.approved && green {
 		if pr.IsDraft {
+			c.r.Causes = []string{CauseDraftReady}
 			c.set(ActNow, "approved and green but still a draft: mark it ready for review")
 			return
 		}
@@ -291,6 +296,7 @@ func (c *classifier) authored() {
 			return
 		}
 		// Not "waiting on reviewers": there are none to wait on.
+		c.r.Causes = []string{CauseNoReviewer}
 		c.set(ActNow, "required checks green but nobody is holding it: request a review%s", c.lastWord())
 		return
 	}

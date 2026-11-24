@@ -25,6 +25,9 @@ type Config struct {
 		PokeAfterBusinessDays  float64 `toml:"poke_after_business_days"`
 		StaleAfterBusinessDays float64 `toml:"stale_after_business_days"`
 	} `toml:"idle"`
+	Snooze struct {
+		DefaultBusinessDays float64 `toml:"default_business_days"`
+	} `toml:"snooze"`
 	Checks struct {
 		AllWhenNoneRequired bool `toml:"all_when_none_required"`
 	} `toml:"checks"`
@@ -41,6 +44,7 @@ func defaultConfig() Config {
 	var c Config
 	c.Idle.PokeAfterBusinessDays = 1
 	c.Idle.StaleAfterBusinessDays = 3
+	c.Snooze.DefaultBusinessDays = 3
 	c.Checks.AllWhenNoneRequired = true
 	return c
 }

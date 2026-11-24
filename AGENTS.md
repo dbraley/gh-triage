@@ -22,6 +22,7 @@ go test ./...                          # no network; runs against testdata/*.jso
 go build && gh extension install .     # local install (a link to this checkout)
 gh triage --from testdata              # classify the committed fixtures offline
 gh triage --explain testdata/<case>.json   # decision trail for one fixture
+gh triage --state /tmp/s.json snooze testdata/<case>.json   # --state is required for fixtures
 ```
 
 Release: push a `v*` tag; `.github/workflows/release.yml` builds the binaries.
@@ -34,6 +35,9 @@ Commits to `main` alone do not reach installed users.
 - `internal/classify`: pure functions of a `fetch.PR` plus `Options`. No
   network and no clock; "now" comes from `Options.Now`, which fixtures supply
   via `fetchedAt`.
+- `internal/snooze`: wake rules (`Evaluate`) and the snooze state file
+  (`Store`). Hiding a PR is applied in `main`; `render` only displays what
+  `render.Item` carries.
 - `internal/render`: terminal, markdown and explain output.
 - `main.go`, `config.go`: flags, config loading, wiring.
 
@@ -48,6 +52,20 @@ Rules that are easy to break:
 - Thread state is decided by the latest *human* comment; bot comments are
   ignored.
 - Idle time is business time (weekends excluded).
+- `snooze.Evaluate` is pure: PR, classification and `Options.Now`, no clock
+  or file access. The state file is private and lives outside the repo by
+  default. Never commit one or quote from it in tests or docs.
+- `Result.Causes` keys (ACT NOW causes) must stay stable: they are persisted
+  in the state file, and a new key wakes older snoozes.
+- `--from` (and fixture `--explain`) ignore the state file unless `--state` is
+  given, so fixture runs and tests never read the user's real snoozes. With
+  `--state`, a `--from` run still removes entries that woke, but never prunes
+  entries for PRs it did not load. `--explain` never writes. `snooze` and
+  `unsnooze` on a fixture file require `--state`.
+- A live report prunes snoozes only when every PR fetch succeeded and the
+  team list was complete (`canPrune`). A state
+  file that cannot be read or written is a warning for the report, an error
+  for `snooze`/`unsnooze`.
 - Dependencies: `go-gh/v2` and one TOML library. Otherwise stdlib.
 
 ## Changing classification

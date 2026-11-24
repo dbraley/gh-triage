@@ -32,11 +32,17 @@ func run(args []string, stdout, stderr io.Writer) error {
 	fs.SetOutput(stderr)
 	markdown := fs.Bool("markdown", false, "print Obsidian Tasks markdown instead of the terminal report")
 	showBots := fs.Bool("show-bots", false, "expand the Automated section")
+	showSnoozed := fs.Bool("show-snoozed", false, "expand the Snoozed section")
+	statePath := fs.String("state", "", stateHelp)
 	dump := fs.String("dump", "", "save each PR's raw GraphQL response to `DIR` as a fixture (private data!)")
 	explain := fs.String("explain", "", "print the decision trail for one PR `URL` (or fixture file)")
 	from := fs.String("from", "", "classify the fixtures in `DIR` instead of querying GitHub")
 	scrub := fs.String("scrub", "", "print a scrubbed, committable copy of fixture `FILE`")
 	configPath := fs.String("config", "", "config `FILE` (default ./config.toml, then ~/.config/gh-triage/config.toml)")
+	fs.Usage = func() {
+		fmt.Fprintf(stderr, "usage: gh triage [flags]\n       gh triage snooze <PR url> [--for 3d]\n       gh triage unsnooze <PR url>\n\nflags:\n")
+		fs.PrintDefaults()
+	}
 	if err := fs.Parse(args); err != nil {
 		if err == flag.ErrHelp {
 			return nil
@@ -44,7 +50,14 @@ func run(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 	if fs.NArg() > 0 {
-		return fmt.Errorf("unexpected argument %q", fs.Arg(0))
+		cmd := fs.Arg(0)
+		if cmd != "snooze" && cmd != "unsnooze" {
+			return fmt.Errorf("unexpected argument %q", cmd)
+		}
+		if err := onlyConfigAndState(fs, cmd); err != nil {
+			return err
+		}
+		return runSnoozeCmd(cmd, fs.Args()[1:], *configPath, *statePath, stdout, stderr)
 	}
 
 	if *scrub != "" {
@@ -68,9 +81,15 @@ func run(args []string, stdout, stderr io.Writer) error {
 		StaleAfter:   businessDays(cfg.Idle.StaleAfterBusinessDays),
 		SlackHandles: cfg.Slack.Handles,
 	}
+	// Each item is classified, and its snooze judged, at its own clock.
+	var ctxs []itemCtx
 	classifyFixture := func(f fetch.Fixture) render.Item {
+		ctxs = append(ctxs, itemCtx{me: f.Viewer, now: f.FetchedAt})
 		return render.Item{PR: f.Node, Res: classify.Classify(f.Node, cfg.classifyOptions(f.Viewer, f.ViewerTeams, f.FetchedAt))}
 	}
+	live := *from == ""
+	// Fixture runs must never read the user's real state file.
+	useState := live || *statePath != ""
 
 	// Offline paths: a fixture carries its own viewer, teams and clock.
 	if *explain != "" && !strings.Contains(*explain, "://") {
@@ -78,12 +97,17 @@ func run(args []string, stdout, stderr io.Writer) error {
 		if err != nil {
 			return err
 		}
-		render.Explain(stdout, classifyFixture(f))
+		it := classifyFixture(f)
+		if *statePath != "" { // a fixture never reads the default state file
+			explainSnooze(&it, ctxs[0], cfg, *statePath, stderr)
+		}
+		render.Explain(stdout, it)
 		return nil
 	}
 	var items []render.Item
 	var pokeOpts classify.Options
-	if *from != "" {
+	prune := false // every live lookup succeeded, so absence means the PR has left the report
+	if !live {
 		paths, err := filepath.Glob(filepath.Join(*from, "*.json"))
 		if err != nil {
 			return err
@@ -101,21 +125,9 @@ func run(args []string, stdout, stderr io.Writer) error {
 		}
 		pokeOpts = cfg.classifyOptions("", nil, ropts.Now)
 	} else {
-		client, err := fetch.NewClient()
+		client, me, teams, teamsComplete, err := connect(cfg, stderr)
 		if err != nil {
 			return err
-		}
-		me := cfg.Login
-		if me == "" {
-			if me, err = client.Viewer(); err != nil {
-				return err
-			}
-		}
-		teams := cfg.Teams
-		if len(teams) == 0 {
-			if teams, err = client.Teams(me); err != nil {
-				fmt.Fprintf(stderr, "warning: could not list all your teams (%v)\n  run `gh auth refresh -s read:org -s repo`, or set `teams` in config.toml\n", err)
-			}
 		}
 		copts := cfg.classifyOptions(me, teams, ropts.Now)
 		pokeOpts = copts
@@ -139,7 +151,9 @@ func run(args []string, stdout, stderr io.Writer) error {
 			if err := save(f); err != nil {
 				return err
 			}
-			render.Explain(stdout, render.Item{PR: f.PR, Res: classify.Classify(f.PR, copts)})
+			it := render.Item{PR: f.PR, Res: classify.Classify(f.PR, copts)}
+			explainSnooze(&it, itemCtx{me: me, now: ropts.Now}, cfg, *statePath, stderr)
+			render.Explain(stdout, it)
 			return nil
 		}
 
@@ -163,16 +177,28 @@ func run(args []string, stdout, stderr io.Writer) error {
 				return err
 			}
 			items = append(items, render.Item{PR: f.PR, Res: classify.Classify(f.PR, copts)})
+			ctxs = append(ctxs, itemCtx{me: me, now: ropts.Now})
 		}
+		// A transient error must not drop a snooze; an empty result is more
+		// likely an outage than every PR having closed.
+		prune = canPrune(live, len(fetched), len(errs), teamsComplete)
 		if *dump != "" {
 			fmt.Fprintf(stderr, "wrote %d fixtures to %s (private: scrub before committing)\n", len(fetched), *dump)
 		}
 	}
 
-	prs := make([]fetch.PR, len(items))
-	results := make([]classify.Result, len(items))
-	for i, it := range items {
-		prs[i], results[i] = it.PR, it.Res
+	if useState {
+		applyState(*statePath, items, ctxs, cfg.Bots.Patterns, prune, stderr)
+	}
+	ropts.ShowSnoozed = *showSnoozed
+
+	// Snoozed PRs are hidden, so nobody gets poked about them either.
+	var prs []fetch.PR
+	var results []classify.Result
+	for _, it := range items {
+		if it.SnoozedUntil.IsZero() {
+			prs, results = append(prs, it.PR), append(results, it.Res)
+		}
 	}
 	pokes := classify.PokeList(prs, results, pokeOpts)
 	if *markdown {

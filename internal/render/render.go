@@ -15,10 +15,29 @@ import (
 type Item struct {
 	PR  fetch.PR
 	Res classify.Result
+	// SnoozedUntil is set when a snooze still holds; the item is then listed
+	// only in the Snoozed section. Woke is the note for an item whose snooze
+	// just ended. Both come from the caller: render never reads the store.
+	SnoozedUntil time.Time
+	Woke         string
+}
+
+func (it Item) snoozed() bool { return !it.SnoozedUntil.IsZero() }
+
+// WakeSummary is what ends a snooze before its time is up, worded once for
+// every place that says it.
+const WakeSummary = "a push, a comment or review by someone else, or a change in what it needs"
+
+// TimeFormat is how wake times are printed, with the zone abbreviation.
+const TimeFormat = "2006-01-02 15:04 MST"
+
+func (it Item) wakesAt() string {
+	return it.SnoozedUntil.Format(TimeFormat) + " (or on " + WakeSummary + ")"
 }
 
 type Options struct {
 	ShowBots     bool
+	ShowSnoozed  bool
 	Color        bool
 	Now          time.Time
 	StaleAfter   time.Duration     // business time; 0 disables the marker
@@ -35,6 +54,7 @@ type view struct {
 	mine, review, bots map[classify.Bucket][]Item
 	nMine, nReview     int
 	nBots, nNothing    int
+	snoozed            []Item // by wake time, earliest first
 }
 
 func group(items []Item) view {
@@ -44,6 +64,8 @@ func group(items []Item) view {
 	for _, it := range sorted {
 		b := it.Res.Bucket
 		switch {
+		case it.snoozed(): // before the bot case: a snoozed bot PR counts as snoozed
+			v.snoozed = append(v.snoozed, it)
 		case it.Res.Bot:
 			v.bots[b] = append(v.bots[b], it)
 			v.nBots++
@@ -57,7 +79,17 @@ func group(items []Item) view {
 			v.nReview++
 		}
 	}
+	sort.SliceStable(v.snoozed, func(i, j int) bool { return v.snoozed[i].SnoozedUntil.Before(v.snoozed[j].SnoozedUntil) })
 	return v
+}
+
+// snoozedSummary counts the snoozed items by the bucket they would be in.
+func (v view) snoozedSummary() string {
+	by := map[classify.Bucket][]Item{}
+	for _, it := range v.snoozed {
+		by[it.Res.Bucket] = append(by[it.Res.Bucket], it)
+	}
+	return summary(by)
 }
 
 var allBuckets = append(append(append([]classify.Bucket{}, classify.AuthoredOrder...), classify.ReviewOrder...), classify.Nothing)
@@ -130,7 +162,11 @@ func (t term) buckets(order []classify.Bucket, by map[classify.Bucket][]Item, o 
 			if o.stale(it) {
 				stale = t.c(red, "  STALE")
 			}
-			fmt.Fprintf(t.w, "    %s%s  %s%s\n", label, t.c(bold, it.PR.Ref()), it.PR.Title, stale)
+			woke := ""
+			if it.Woke != "" {
+				woke = t.c(cyan, "  ("+it.Woke+")")
+			}
+			fmt.Fprintf(t.w, "    %s%s  %s%s%s\n", label, t.c(bold, it.PR.Ref()), it.PR.Title, stale, woke)
 			fmt.Fprintf(t.w, "        %s\n", it.Res.Reason)
 			fmt.Fprintf(t.w, "        %s\n", t.c(dim, it.PR.URL))
 		}
@@ -165,6 +201,18 @@ func Terminal(w io.Writer, items []Item, pokes []classify.PokeEntry, o Options) 
 			fmt.Fprintf(w, "  %s  %s\n", summary(v.bots), t.c(dim, "(--show-bots to expand)"))
 		}
 	}
+	if len(v.snoozed) > 0 {
+		t.section(fmt.Sprintf("SNOOZED (%d)", len(v.snoozed)))
+		if o.ShowSnoozed {
+			for _, it := range v.snoozed {
+				fmt.Fprintf(w, "    %s  %s\n", t.c(bold, it.PR.Ref()), it.PR.Title)
+				fmt.Fprintf(w, "        %s, wakes %s\n", it.Res.Bucket, it.wakesAt())
+				fmt.Fprintf(w, "        %s\n", t.c(dim, it.PR.URL))
+			}
+		} else {
+			fmt.Fprintf(w, "  %s  %s\n", v.snoozedSummary(), t.c(dim, "(--show-snoozed to expand)"))
+		}
+	}
 	if v.nNothing > 0 {
 		fmt.Fprintf(w, "\n%s\n", t.c(dim, fmt.Sprintf("%d other open PR(s) you are involved in need nothing from you.", v.nNothing)))
 	}
@@ -187,6 +235,12 @@ func Explain(w io.Writer, it Item) {
 		fmt.Fprintf(w, "  - %s\n", line)
 	}
 	fmt.Fprintf(w, "\n%s: %s\n", it.Res.Bucket, it.Res.Reason)
+	switch {
+	case it.snoozed():
+		fmt.Fprintf(w, "\nSnoozed until %s\n", it.wakesAt())
+	case it.Woke != "":
+		fmt.Fprintf(w, "\nSnooze would wake now: %s\n", it.Woke)
+	}
 }
 
 // ---- markdown (Obsidian Tasks) ----
@@ -213,6 +267,9 @@ func mdBuckets(w io.Writer, order []classify.Bucket, by map[classify.Bucket][]It
 			line := fmt.Sprintf("%s[%s](%s) %s: %s", label, it.PR.Ref(), it.PR.URL, mdEscape(it.PR.Title), it.Res.Reason)
 			if o.stale(it) {
 				line += " (stale)"
+			}
+			if it.Woke != "" {
+				line += " (" + it.Woke + ")"
 			}
 			if prio, ok := taskPriority[b]; ok {
 				fmt.Fprintf(w, "- [ ] %s %s\n", line, prio)
@@ -247,6 +304,21 @@ func Markdown(w io.Writer, items []Item, pokes []classify.PokeEntry, o Options) 
 			mdBuckets(w, allBuckets, v.bots, o)
 		} else {
 			fmt.Fprintf(w, "\n%d bot PRs: %s\n", v.nBots, summary(v.bots))
+		}
+	}
+	// Plain lines, not tasks: a snoozed PR needs no action until it wakes.
+	switch {
+	case len(v.snoozed) == 0:
+	case !o.ShowSnoozed:
+		noun := "PRs"
+		if len(v.snoozed) == 1 {
+			noun = "PR"
+		}
+		fmt.Fprintf(w, "\n%d snoozed %s hidden: %s\n", len(v.snoozed), noun, v.snoozedSummary())
+	default:
+		fmt.Fprintf(w, "\n### Snoozed\n\n")
+		for _, it := range v.snoozed {
+			fmt.Fprintf(w, "- [%s](%s) %s: %s, wakes %s\n", it.PR.Ref(), it.PR.URL, mdEscape(it.PR.Title), it.Res.Bucket, it.wakesAt())
 		}
 	}
 }

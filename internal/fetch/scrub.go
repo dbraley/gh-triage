@@ -47,13 +47,16 @@ func Scrub(f Fixture) Fixture {
 			}
 		}
 	}
-	for _, reviews := range [][]Review{pr.LatestOpinionatedReviews.Nodes, pr.LatestReviews.Nodes} {
+	for _, reviews := range [][]Review{pr.LatestOpinionatedReviews.Nodes, pr.LatestReviews.Nodes, pr.Reviews.Nodes} {
 		for i := range reviews {
 			s.actor(&reviews[i].Author)
 			if reviews[i].Commit != nil {
 				reviews[i].Commit.OID = s.name("oid", reviews[i].Commit.OID)
 			}
 		}
+	}
+	for i := range pr.Comments.Nodes {
+		s.actor(&pr.Comments.Nodes[i].Author)
 	}
 	for i := range pr.ReviewRequests.Nodes {
 		s.reviewer(&pr.ReviewRequests.Nodes[i].RequestedReviewer)

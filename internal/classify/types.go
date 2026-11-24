@@ -70,9 +70,23 @@ type Holder struct {
 	Idle     time.Duration // business time from Since to Now
 }
 
+// Causes behind an ACT NOW. The keys are persisted in the snooze state file,
+// so they must stay stable: never rename one, and never put volatile text
+// (check names, logins, durations) in one.
+const (
+	CauseChecksFailed     = "checks-failed"
+	CauseConflict         = "conflict"
+	CauseChangesRequested = "changes-requested"
+	CauseThreads          = "threads"
+	CauseEjected          = "ejected"
+	CauseDraftReady       = "draft-ready"
+	CauseNoReviewer       = "no-reviewer"
+)
+
 type Result struct {
 	Bucket Bucket
 	Reason string
+	Causes []string // stable keys, one per cause; set only for ACT NOW
 	Trail  []string // every rule evaluated, in order, for --explain
 
 	Mine     bool // authored by the viewer
@@ -113,6 +127,9 @@ func BusinessDuration(from, to time.Time) time.Duration {
 	var total time.Duration
 	for cur.Before(to) {
 		next := time.Date(cur.Year(), cur.Month(), cur.Day()+1, 0, 0, 0, 0, cur.Location())
+		if !next.After(cur) { // midnight skipped by a DST gap
+			next = cur.Add(24 * time.Hour)
+		}
 		if next.After(to) {
 			next = to
 		}
