@@ -85,6 +85,12 @@ query($id: ID!) {
       latestReviews(first: 50) {
         nodes { author { __typename login } state submittedAt commit { oid } }
       }
+      comments(last: 30) {
+        nodes { author { __typename login } createdAt }
+      }
+      reviews(last: 30) {
+        nodes { author { __typename login } state submittedAt commit { oid } }
+      }
       reviewRequests(first: 50) {
         nodes { requestedReviewer { ...reviewer } }
       }

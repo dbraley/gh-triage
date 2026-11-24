@@ -5,3 +5,7 @@ testdata/local/
 # Build output
 /gh-triage
 /dist/
+
+# Snooze state names real PRs; never commit one.
+snoozes.json
+.snoozes-*.tmp

@@ -2,9 +2,11 @@ package classify
 
 import (
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
+	_ "time/tzdata" // the DST-gap test must not depend on system tzdata
 
 	"github.com/dbraley/gh-triage/internal/fetch"
 )
@@ -46,6 +48,8 @@ func TestClassifyFixtures(t *testing.T) {
 	}{
 		// Known bug: "waiting on CI" while nothing required is pending.
 		{"authored_optional_check_pending", Poke, "user-2", "user-2", "user-2"},
+		// Carries a conversation comment and a review for the snooze wake tests.
+		{"authored_snooze_activity", Poke, "user-2", "user-2", "user-2"},
 		{"authored_rerun_superseded", ReadyToEnqueue, "add to the merge queue", "", ""},
 		// Known bug: "waiting on other reviewers" while nobody is.
 		{"authored_no_reviewers", ActNow, "request a review", "", ""},
@@ -99,7 +103,56 @@ func TestClassifyFixtures(t *testing.T) {
 			if len(r.Trail) == 0 {
 				t.Error("empty decision trail")
 			}
+			if (r.Bucket == ActNow) != (len(r.Causes) > 0) {
+				t.Errorf("causes = %v for bucket %q: set exactly for ACT NOW", r.Causes, r.Bucket)
+			}
 		})
+	}
+}
+
+// Causes are persisted in the snooze state file: the keys must stay stable and
+// carry no volatile text.
+func TestActNowCauses(t *testing.T) {
+	for _, tc := range []struct {
+		fixture string
+		tweak   func(*fetch.PR)
+		want    []string
+	}{
+		{"authored_required_failed", nil, []string{CauseChecksFailed}},
+		{"authored_conflict", nil, []string{CauseConflict}},
+		{"authored_changes_requested", nil, []string{CauseChangesRequested}},
+		{"authored_thread_activity", nil, []string{CauseThreads}},
+		{"queue_kicked", nil, []string{CauseEjected}},
+		{"authored_no_reviewers", nil, []string{CauseNoReviewer}},
+		{"queue_ready", func(pr *fetch.PR) { pr.IsDraft = true }, []string{CauseDraftReady}},
+		{"authored_required_failed", func(pr *fetch.PR) { pr.Mergeable = "CONFLICTING" }, []string{CauseChecksFailed, CauseConflict}},
+		{"authored_ci_pending", nil, nil},
+		{"review_direct", nil, nil},
+	} {
+		t.Run(tc.fixture+"/"+strings.Join(tc.want, "+"), func(t *testing.T) {
+			f, err := fetch.LoadFixture(filepath.Join("..", "..", "testdata", tc.fixture+".json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if tc.tweak != nil {
+				tc.tweak(&f.Node)
+			}
+			o := Options{Me: f.Viewer, Teams: f.ViewerTeams, Now: f.FetchedAt, PokeAfter: 24 * time.Hour, AllChecksWhenNoneRequired: true}
+			r := Classify(f.Node, o)
+			if !slices.Equal(r.Causes, tc.want) {
+				t.Errorf("causes = %v, want %v (bucket %q: %s)", r.Causes, tc.want, r.Bucket, r.Reason)
+			}
+		})
+	}
+	// The wire values are persisted; a rename is a breaking change.
+	for _, k := range []string{CauseChecksFailed, CauseConflict, CauseChangesRequested, CauseThreads, CauseEjected, CauseDraftReady, CauseNoReviewer} {
+		if strings.ToLower(k) != k || strings.ContainsAny(k, " :/") {
+			t.Errorf("cause key %q is not a short stable key", k)
+		}
+	}
+	if CauseChecksFailed != "checks-failed" || CauseConflict != "conflict" || CauseChangesRequested != "changes-requested" ||
+		CauseThreads != "threads" || CauseEjected != "ejected" || CauseDraftReady != "draft-ready" || CauseNoReviewer != "no-reviewer" {
+		t.Error("a persisted cause key changed")
 	}
 }
 
@@ -191,13 +244,35 @@ func TestBusinessDuration(t *testing.T) {
 	}
 }
 
+// Local midnight can be skipped by a DST change (Santiago springs forward at
+// midnight); the walk must still advance.
+func TestBusinessDurationSkippedMidnight(t *testing.T) {
+	santiago, err := time.LoadLocation("America/Santiago")
+	if err != nil {
+		t.Fatal(err)
+	}
+	from := time.Date(2026, 9, 3, 6, 0, 0, 0, santiago) // Thursday
+	to := time.Date(2026, 9, 7, 12, 0, 0, 0, santiago)  // Monday
+	done := make(chan time.Duration, 1)
+	go func() { done <- BusinessDuration(from, to) }()
+	select {
+	case got := <-done:
+		// Thu 06:00 -> Sat 00:00 is 42h; Mon 00:00 -> 12:00 is 12h.
+		if got != 54*time.Hour {
+			t.Errorf("BusinessDuration = %v, want 54h", got)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("BusinessDuration did not return: infinite loop")
+	}
+}
+
 func TestGlob(t *testing.T) {
 	for _, c := range []struct {
 		pat, s string
 		want   bool
 	}{
-		{"Khan/archived-*", "khan/archived-thing", true},
-		{"Khan/archived-*", "Khan/webapp", false},
+		{"Org-1/archived-*", "org-1/archived-thing", true},
+		{"Org-1/archived-*", "Org-1/repo-1", false},
 		{"*[bot]", "renovate[bot]", true},
 		{"*[bot]", "robot", false},
 		{"dependabot*", "dependabot", true},

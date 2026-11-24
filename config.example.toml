@@ -6,11 +6,11 @@
 
 # Teams whose review requests count as "team" requests, as "org/slug".
 # Default: every team you belong to (needs the read:org scope).
-# teams = ["Khan/infrastructure"]
+# teams = ["org-1/team-1"]
 
 # Scope is every open PR you are involved in, minus these. "*" is a wildcard.
 # Archived repos are always skipped.
-exclude_repos = []   # e.g. ["Khan/archived-*", "someone/fork-i-ignore"]
+exclude_repos = []   # e.g. ["org-1/archived-*", "someone/fork-i-ignore"]
 exclude_orgs = []    # e.g. ["old-employer"]
 
 # true: a request to one of your teams lands in REVIEW REQUESTED.
@@ -23,6 +23,11 @@ team_requests_are_mine = false
 poke_after_business_days = 1
 # Review requests and pokes idle this long are marked STALE.
 stale_after_business_days = 3
+
+[snooze]
+# How long `gh triage snooze` hides a PR when --for is not given.
+# Business days (may be fractional, e.g. 0.5). 0 means --for is required.
+default_business_days = 3
 
 [checks]
 # In a repo with no required checks, treat every check as required so a red
@@ -38,10 +43,10 @@ show = false
 # built-ins (dependabot*, renovate*, github-actions*, *[bot], and anything
 # GitHub itself reports as a Bot). `label` is what the report calls it.
 # [[bots.patterns]]
-# pattern = "khan-release-*"
+# pattern = "release-bot-*"
 # label = "Release bot"
 
 [slack.handles]
 # GitHub login (or "org/team") -> Slack handle, for the paste-ready nudges.
 # octocat = "mona"
-# "Khan/infrastructure" = "infra-team"
+# "org-1/team-1" = "infra-team"

@@ -26,6 +26,9 @@ asked to review (directly or via a team), or have reviewed; the config
 gh triage                      # grouped terminal report
 gh triage --markdown           # Obsidian Tasks for a daily note
 gh triage --show-bots          # expand the Automated section
+gh triage --show-snoozed       # expand the Snoozed section
+gh triage snooze <PR url> [--for 3d]   # hide a PR until something happens
+gh triage unsnooze <PR url>    # bring it back now
 gh triage --explain <PR url>   # the decision trail for one PR
 gh triage --dump testdata/local   # also save raw responses as fixtures
 gh triage --from testdata      # classify fixtures, no network
@@ -57,6 +60,49 @@ poke list; a human sitting on a bot PR is.
 The poke list is everyone holding a PR longer than
 `poke_after_business_days`, with a Slack message to paste.
 
+## Snoozing
+
+`gh triage snooze <PR url>` hides a PR from the report, and from the poke
+list, until the first of:
+
+- a new push;
+- a new comment or review by someone other than you or a bot;
+- your review being requested again (you, not a team);
+- a change in what it needs: its bucket changes, or, for ACT NOW, a new
+  problem appears (a failing check, a conflict, changes requested, new thread
+  activity, a merge queue ejection, ...). A problem going away does not wake it;
+- the time limit.
+
+The push and bucket/problem wakes apply whoever caused them, including you;
+only comments and reviews are limited to other humans.
+
+Snoozed PRs are counted in a collapsed SNOOZED line (`--show-snoozed` lists
+them and when they wake). A PR that wakes is shown normally with a note such as
+`snooze ended: new comment by user-3`, on the first report after it wakes and
+only that one.
+
+`snooze` prints the bucket and reason it snoozed, since the PR may have changed
+since you last looked. Snoozing again replaces the old snooze. `<PR url>` is a
+PR URL (a trailing slash, `/files`, a query or a fragment are fine), or
+`org/repo#123`; `unsnooze` accepts the same forms. A fixture file also works
+for offline use, with `--state FILE`.
+
+The limit is `[snooze] default_business_days` (3), or `--for`: whole days
+and/or hours (`3d`, `12h`, `1d12h`). A day is 24h. Saturdays and Sundays do not
+count for either unit, so `--for 12h` on a Friday evening wakes on Monday.
+
+A snooze is dropped once its PR no longer appears in your report (closed,
+merged, excluded by config, or you are no longer involved). This is only
+checked on a live report where every lookup succeeded.
+
+Flags: `--for` goes after `snooze`; `--config` and `--state` work on either
+side of the subcommand. `--explain` shows a PR's snooze status and never
+changes it.
+
+State is a private local file, `$XDG_STATE_HOME/gh-triage/snoozes.json`
+(default `~/.local/state/gh-triage/`), or `--state FILE`. It names your PRs;
+never commit it. `--from DIR` ignores it unless `--state` is given.
+
 ## When a PR is misclassified
 
 1. Capture it: `gh triage --explain <PR url> --dump testdata/local`. The trail
@@ -78,3 +124,7 @@ The poke list is everyone holding a PR longer than
   GitHub says BLOCKED on an otherwise ready PR, the reason line says so.
 - Whether a merge queue removal was an ejection is inferred: it was not you,
   and you have not pushed since. The removal reason is shown.
+- Snooze checks only the 30 most recent conversation comments and the 30 most
+  recent reviews on a PR.
+- The snooze state file has no lock: two simultaneous runs are
+  last-writer-wins.

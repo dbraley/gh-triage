@@ -189,6 +189,14 @@ type PR struct {
 	ReviewThreads struct {
 		Nodes []Thread `json:"nodes"`
 	} `json:"reviewThreads"`
+	// Comments are the most recent conversation (non-review) comments.
+	Comments struct {
+		Nodes []Comment `json:"nodes"`
+	} `json:"comments"`
+	// Reviews are the most recent review submissions, of any state.
+	Reviews struct {
+		Nodes []Review `json:"nodes"`
+	} `json:"reviews"`
 	TimelineItems struct {
 		Nodes []TimelineItem `json:"nodes"`
 	} `json:"timelineItems"`
