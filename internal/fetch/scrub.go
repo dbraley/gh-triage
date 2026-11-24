@@ -26,6 +26,9 @@ func Scrub(f Fixture) Fixture {
 	pr.URL = "https://github.com/" + repo + "/pull/1"
 	pr.Repository.NameWithOwner = repo
 	pr.Repository.Owner.Login = org
+	if pr.StackedOn() != "" { // default branch names are not private
+		pr.BaseRefName = s.name("branch", pr.BaseRefName)
+	}
 	s.actor(&pr.Author)
 
 	for i := range pr.Commits.Nodes {

@@ -47,7 +47,7 @@ func TestRunFromFixtures(t *testing.T) {
 	}
 
 	term := out("--from", "testdata")
-	for _, want := range []string{"ACT NOW (6)", "READY TO ENQUEUE (2)", "IN MERGE QUEUE (1)", "REVIEW REQUESTED (1)", "POKE LIST (3)", "AUTOMATED (2)", "--show-bots"} {
+	for _, want := range []string{"ACT NOW (6)", "READY TO ENQUEUE (3)", "WAITING ON STACK (1)","IN MERGE QUEUE (1)", "REVIEW REQUESTED (1)", "POKE LIST (3)", "AUTOMATED (2)", "--show-bots"} {
 		if !strings.Contains(term, want) {
 			t.Errorf("terminal output missing %q:\n%s", want, term)
 		}

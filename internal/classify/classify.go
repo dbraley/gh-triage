@@ -253,10 +253,19 @@ func (c *classifier) authored() {
 			c.set(ActNow, "approved and green but still a draft: mark it ready for review")
 			return
 		}
+		// A PR stacked on another branch cannot land until the one below
+		// it does. (GitHub also reports no merge queue for such PRs: queues
+		// belong to the base branch.)
+		if base := pr.StackedOn(); base != "" {
+			c.set(Stacked, "approved and green, but it targets %s, not %s: land the PR below it first%s",
+				base, pr.Repository.DefaultBranchRef.Name, c.botApprovalNote())
+			return
+		}
 		reason := "approved, required checks green, no conflicts: add to the merge queue"
 		if !pr.IsMergeQueueEnabled {
 			reason = "approved, required checks green, no conflicts: merge it (this repo has no merge queue)"
 		}
+		reason += c.botApprovalNote()
 		if pr.AutoMergeRequest != nil {
 			reason += " (auto-merge is on but it has not been queued)"
 		}
@@ -302,6 +311,36 @@ func (c *classifier) authored() {
 	c.set(Nothing, "no rule matched; run with --dump and add a fixture")
 }
 
+// botApprovalNote flags an approval that no human gave.
+func (c *classifier) botApprovalNote() string {
+	var bots []string
+	for _, rv := range c.pr.LatestOpinionatedReviews.Nodes {
+		if rv.State != "APPROVED" {
+			continue
+		}
+		if !c.isBot(rv.Author) {
+			return ""
+		}
+		bots = append(bots, rv.Author.Login)
+	}
+	if len(bots) == 0 {
+		return ""
+	}
+	return " (approved only by a bot: " + strings.Join(bots, ", ") + ")"
+}
+
+// lastHuman is the newest comment in a thread not written by a bot. Bot
+// comments (CI annotations, automated reviewers) never put the ball in
+// anyone's court.
+func (c *classifier) lastHuman(cs []fetch.Comment) (fetch.Comment, bool) {
+	for i := len(cs) - 1; i >= 0; i-- {
+		if !c.isBot(cs[i].Author) {
+			return cs[i], true
+		}
+	}
+	return fetch.Comment{}, false
+}
+
 // lastWord explains a holder-less PR when a reviewer already weighed in on
 // the current commit without approving.
 func (c *classifier) lastWord() string {
@@ -314,16 +353,16 @@ func (c *classifier) lastWord() string {
 }
 
 // threadsNeedingAuthor counts unresolved threads whose latest comment is
-// from someone other than the author and newer than the last push.
+// from a human other than the author and newer than the last push.
 func (c *classifier) threadsNeedingAuthor() (int, []string) {
 	n := 0
 	var who []string
 	for _, t := range c.pr.ReviewThreads.Nodes {
 		cs := t.Comments.Nodes
-		if t.IsResolved || len(cs) == 0 {
+		last, ok := c.lastHuman(cs)
+		if t.IsResolved || !ok {
 			continue
 		}
-		last := cs[len(cs)-1]
 		if fetch.EqualFold(last.Author.Login, c.pr.Author.Login) || !last.CreatedAt.After(c.lastPush) {
 			continue
 		}
@@ -444,10 +483,10 @@ func (c *classifier) reviewer() bool {
 	var oldest time.Time
 	for _, t := range pr.ReviewThreads.Nodes {
 		cs := t.Comments.Nodes
-		if t.IsResolved || len(cs) == 0 || c.isMe(cs[len(cs)-1].Author.Login) {
+		last, ok := c.lastHuman(cs)
+		if t.IsResolved || !ok || c.isMe(last.Author.Login) {
 			continue
 		}
-		last := cs[len(cs)-1]
 		for _, cm := range cs {
 			if c.isMe(cm.Author.Login) {
 				n++

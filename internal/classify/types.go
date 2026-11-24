@@ -16,6 +16,7 @@ const (
 	InMergeQueue   Bucket = "IN MERGE QUEUE"
 	ReadyToEnqueue Bucket = "READY TO ENQUEUE"
 	Poke           Bucket = "POKE"
+	Stacked        Bucket = "WAITING ON STACK"
 	WaitingOnCI    Bucket = "WAITING ON CI"
 	Draft          Bucket = "DRAFT"
 	// PRs by others.
@@ -29,7 +30,7 @@ const (
 
 // AuthoredOrder and ReviewOrder are display order (highest priority first).
 var (
-	AuthoredOrder = []Bucket{ActNow, ReadyToEnqueue, Poke, InMergeQueue, WaitingOnCI, Draft}
+	AuthoredOrder = []Bucket{ActNow, ReadyToEnqueue, Poke, Stacked, InMergeQueue, WaitingOnCI, Draft}
 	ReviewOrder   = []Bucket{ReviewRequested, ReReview, ReplyOwed, TeamOnly}
 )
 

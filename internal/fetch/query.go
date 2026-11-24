@@ -48,8 +48,8 @@ const prQuery = `
 query($id: ID!) {
   node(id: $id) {
     ... on PullRequest {
-      id number title url isDraft createdAt
-      repository { nameWithOwner isArchived owner { login } }
+      id number title url isDraft createdAt baseRefName
+      repository { nameWithOwner isArchived owner { login } defaultBranchRef { name } }
       author { __typename login }
       reviewDecision mergeable mergeStateStatus
       isInMergeQueue isMergeQueueEnabled

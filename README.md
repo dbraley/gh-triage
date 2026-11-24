@@ -37,9 +37,10 @@ PRs you authored, first match wins:
 
 | Bucket | Means |
 | --- | --- |
-| ACT NOW | A required check failed on the head commit, merge conflict, changes requested on the current commit, unresolved threads with activity since your last push, ejected from the merge queue, or nobody has been asked to review. |
+| ACT NOW | A required check failed on the head commit, merge conflict, changes requested on the current commit, unresolved threads with human activity since your last push, ejected from the merge queue, or nobody has been asked to review. |
 | IN MERGE QUEUE | Queued; shows position and ETA. |
 | READY TO ENQUEUE | Approved, required checks green, no conflicts. |
+| WAITING ON STACK | Approved and green, but it targets another PR's branch rather than the default branch. |
 | POKE | Required checks green, no approval. Names who is holding it, and says RE-REVIEW if they reviewed an earlier commit. |
 | WAITING ON CI | A *required* check is queued or running on the head commit. Optional, skipped, neutral and superseded runs never count. |
 | DRAFT | Draft with nothing else going on. |

@@ -1,0 +1,374 @@
+{
+  "fetchedAt": "2026-11-24T17:36:50Z",
+  "viewer": "me",
+  "viewerTeams": [
+    "org-1/team-2",
+    "org-1/team-3",
+    "org-1/team-1",
+    "org-1/team-4",
+    "org-1/team-5",
+    "org-2/team-6"
+  ],
+  "node": {
+    "id": "PR_scrubbed",
+    "number": 1,
+    "title": "Scrubbed pull request",
+    "url": "https://github.com/org-1/repo-1/pull/1",
+    "isDraft": false,
+    "createdAt": "2026-10-28T19:53:32Z",
+    "repository": {
+      "nameWithOwner": "org-1/repo-1",
+      "isArchived": false,
+      "owner": {
+        "login": "org-1"
+      },
+      "defaultBranchRef": {
+        "name": "main"
+      }
+    },
+    "baseRefName": "main",
+    "author": {
+      "__typename": "User",
+      "login": "me"
+    },
+    "reviewDecision": "APPROVED",
+    "mergeable": "MERGEABLE",
+    "mergeStateStatus": "CLEAN",
+    "isInMergeQueue": false,
+    "isMergeQueueEnabled": false,
+    "mergeQueueEntry": null,
+    "autoMergeRequest": null,
+    "commits": {
+      "nodes": [
+        {
+          "commit": {
+            "oid": "oid-1",
+            "committedDate": "2026-11-24T16:41:54Z",
+            "statusCheckRollup": {
+              "state": "SUCCESS",
+              "contexts": {
+                "totalCount": 8,
+                "nodes": [
+                  {
+                    "__typename": "CheckRun",
+                    "name": "check-1",
+                    "status": "COMPLETED",
+                    "conclusion": "SUCCESS",
+                    "startedAt": "2026-11-24T16:42:09Z",
+                    "completedAt": "2026-11-24T16:42:20Z",
+                    "isRequired": false
+                  },
+                  {
+                    "__typename": "CheckRun",
+                    "name": "check-2",
+                    "status": "COMPLETED",
+                    "conclusion": "SUCCESS",
+                    "startedAt": "2026-11-24T16:42:10Z",
+                    "completedAt": "2026-11-24T16:44:40Z",
+                    "isRequired": false
+                  },
+                  {
+                    "__typename": "CheckRun",
+                    "name": "check-3",
+                    "status": "COMPLETED",
+                    "conclusion": "SUCCESS",
+                    "startedAt": "2026-11-24T16:42:10Z",
+                    "completedAt": "2026-11-24T16:42:26Z",
+                    "isRequired": false
+                  },
+                  {
+                    "__typename": "CheckRun",
+                    "name": "check-4",
+                    "status": "COMPLETED",
+                    "conclusion": "SUCCESS",
+                    "startedAt": "2026-11-24T16:42:28Z",
+                    "completedAt": "2026-11-24T16:49:21Z",
+                    "isRequired": false
+                  },
+                  {
+                    "__typename": "CheckRun",
+                    "name": "check-5",
+                    "status": "COMPLETED",
+                    "conclusion": "SUCCESS",
+                    "startedAt": "2026-11-24T16:49:24Z",
+                    "completedAt": "2026-11-24T16:50:30Z",
+                    "isRequired": false
+                  },
+                  {
+                    "__typename": "CheckRun",
+                    "name": "check-6",
+                    "status": "COMPLETED",
+                    "conclusion": "SUCCESS",
+                    "startedAt": "2026-11-24T16:50:33Z",
+                    "completedAt": "2026-11-24T16:50:59Z",
+                    "isRequired": false
+                  },
+                  {
+                    "__typename": "CheckRun",
+                    "name": "check-7",
+                    "status": "COMPLETED",
+                    "conclusion": "SUCCESS",
+                    "startedAt": "2026-11-24T16:50:34Z",
+                    "completedAt": "2026-11-24T16:50:44Z",
+                    "isRequired": false
+                  },
+                  {
+                    "__typename": "CheckRun",
+                    "name": "check-8",
+                    "status": "COMPLETED",
+                    "conclusion": "SUCCESS",
+                    "startedAt": "2026-11-24T16:51:02Z",
+                    "completedAt": "2026-11-24T16:51:19Z",
+                    "isRequired": false
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "latestOpinionatedReviews": {
+      "nodes": [
+        {
+          "author": {
+            "__typename": "Bot",
+            "login": "github-actions"
+          },
+          "state": "APPROVED",
+          "submittedAt": "2026-11-24T16:50:53Z",
+          "commit": {
+            "oid": "oid-1"
+          }
+        }
+      ]
+    },
+    "latestReviews": {
+      "nodes": [
+        {
+          "author": {
+            "__typename": "Bot",
+            "login": "github-actions"
+          },
+          "state": "APPROVED",
+          "submittedAt": "2026-11-24T16:50:53Z",
+          "commit": {
+            "oid": "oid-1"
+          }
+        }
+      ]
+    },
+    "reviewRequests": {
+      "nodes": [
+        {
+          "requestedReviewer": {
+            "__typename": "Team",
+            "slug": "team-1",
+            "organization": {
+              "login": "org-1"
+            }
+          }
+        }
+      ]
+    },
+    "reviewThreads": {
+      "nodes": [
+        {
+          "isResolved": true,
+          "isOutdated": true,
+          "comments": {
+            "nodes": [
+              {
+                "author": {
+                  "__typename": "Bot",
+                  "login": "github-actions"
+                },
+                "createdAt": "2026-10-28T20:04:38Z"
+              },
+              {
+                "author": {
+                  "__typename": "User",
+                  "login": "me"
+                },
+                "createdAt": "2026-10-28T20:17:54Z"
+              }
+            ]
+          }
+        },
+        {
+          "isResolved": true,
+          "isOutdated": true,
+          "comments": {
+            "nodes": [
+              {
+                "author": {
+                  "__typename": "Bot",
+                  "login": "github-actions"
+                },
+                "createdAt": "2026-10-28T20:04:38Z"
+              },
+              {
+                "author": {
+                  "__typename": "User",
+                  "login": "me"
+                },
+                "createdAt": "2026-10-28T20:15:49Z"
+              }
+            ]
+          }
+        },
+        {
+          "isResolved": true,
+          "isOutdated": false,
+          "comments": {
+            "nodes": [
+              {
+                "author": {
+                  "__typename": "Bot",
+                  "login": "github-actions"
+                },
+                "createdAt": "2026-10-28T20:04:38Z"
+              },
+              {
+                "author": {
+                  "__typename": "User",
+                  "login": "me"
+                },
+                "createdAt": "2026-10-28T20:15:52Z"
+              }
+            ]
+          }
+        },
+        {
+          "isResolved": true,
+          "isOutdated": true,
+          "comments": {
+            "nodes": [
+              {
+                "author": {
+                  "__typename": "Bot",
+                  "login": "github-actions"
+                },
+                "createdAt": "2026-10-28T20:29:27Z"
+              },
+              {
+                "author": {
+                  "__typename": "User",
+                  "login": "me"
+                },
+                "createdAt": "2026-10-28T20:38:41Z"
+              }
+            ]
+          }
+        },
+        {
+          "isResolved": true,
+          "isOutdated": true,
+          "comments": {
+            "nodes": [
+              {
+                "author": {
+                  "__typename": "Bot",
+                  "login": "github-actions"
+                },
+                "createdAt": "2026-10-28T20:29:27Z"
+              },
+              {
+                "author": {
+                  "__typename": "User",
+                  "login": "me"
+                },
+                "createdAt": "2026-10-28T20:38:38Z"
+              }
+            ]
+          }
+        },
+        {
+          "isResolved": true,
+          "isOutdated": true,
+          "comments": {
+            "nodes": [
+              {
+                "author": {
+                  "__typename": "Bot",
+                  "login": "github-actions"
+                },
+                "createdAt": "2026-10-28T20:29:28Z"
+              },
+              {
+                "author": {
+                  "__typename": "User",
+                  "login": "me"
+                },
+                "createdAt": "2026-10-28T20:38:43Z"
+              }
+            ]
+          }
+        },
+        {
+          "isResolved": true,
+          "isOutdated": false,
+          "comments": {
+            "nodes": [
+              {
+                "author": {
+                  "__typename": "Bot",
+                  "login": "github-actions"
+                },
+                "createdAt": "2026-11-24T16:50:53Z"
+              },
+              {
+                "author": {
+                  "__typename": "User",
+                  "login": "me"
+                },
+                "createdAt": "2026-11-24T16:57:34Z"
+              }
+            ]
+          }
+        },
+        {
+          "isResolved": true,
+          "isOutdated": false,
+          "comments": {
+            "nodes": [
+              {
+                "author": {
+                  "__typename": "Bot",
+                  "login": "github-actions"
+                },
+                "createdAt": "2026-11-24T16:50:53Z"
+              },
+              {
+                "author": {
+                  "__typename": "User",
+                  "login": "me"
+                },
+                "createdAt": "2026-11-24T16:57:31Z"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "timelineItems": {
+      "nodes": [
+        {
+          "__typename": "ReviewRequestedEvent",
+          "createdAt": "2026-10-28T19:53:48Z",
+          "requestedReviewer": {
+            "__typename": "Team",
+            "slug": "team-1",
+            "organization": {
+              "login": "org-1"
+            }
+          }
+        },
+        {
+          "__typename": "HeadRefForcePushedEvent",
+          "createdAt": "2026-11-24T16:42:01Z"
+        }
+      ]
+    }
+  }
+}

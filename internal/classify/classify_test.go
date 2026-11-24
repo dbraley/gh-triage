@@ -68,6 +68,11 @@ func TestClassifyFixtures(t *testing.T) {
 		{"review_team_only", TeamOnly, "org-1/team-1", "", ""},
 		{"review_nothing_owed", Nothing, "", "", ""},
 
+		// Scrubbed real PRs. Stacked on another PR's branch, with unresolved
+		// threads whose only post-push comments are from a bot.
+		{"real_stacked_bot_threads", Stacked, "land the PR below it first", "", ""},
+		{"real_bot_only_approval", ReadyToEnqueue, "approved only by a bot: github-actions", "", ""},
+
 		// Bots: same rules; never poked themselves, but their human reviewer is.
 		{"bot_dependabot", TeamOnly, "org-1/team-1", "user-3", "user-3"},
 		{"bot_approved_ready", ReadyToEnqueue, "merge it (this repo has no merge queue)", "", ""},

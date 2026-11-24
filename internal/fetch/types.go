@@ -152,10 +152,14 @@ type PR struct {
 	IsDraft    bool      `json:"isDraft"`
 	CreatedAt  time.Time `json:"createdAt"`
 	Repository struct {
-		NameWithOwner string `json:"nameWithOwner"`
-		IsArchived    bool   `json:"isArchived"`
-		Owner         Actor  `json:"owner"`
+		NameWithOwner    string `json:"nameWithOwner"`
+		IsArchived       bool   `json:"isArchived"`
+		Owner            Actor  `json:"owner"`
+		DefaultBranchRef *struct {
+			Name string `json:"name"`
+		} `json:"defaultBranchRef,omitempty"`
 	} `json:"repository"`
+	BaseRefName         string           `json:"baseRefName,omitempty"`
 	Author              Actor            `json:"author"`
 	ReviewDecision      string           `json:"reviewDecision"`
 	Mergeable           string           `json:"mergeable"`
@@ -196,6 +200,17 @@ func (p PR) Head() Commit {
 		return p.Commits.Nodes[n-1].Commit
 	}
 	return Commit{}
+}
+
+// StackedOn returns the base branch when the PR targets something other
+// than the repo's default branch (i.e. it sits on top of another PR), and
+// "" otherwise or when the data is missing.
+func (p PR) StackedOn() string {
+	d := p.Repository.DefaultBranchRef
+	if p.BaseRefName == "" || d == nil || d.Name == "" || p.BaseRefName == d.Name {
+		return ""
+	}
+	return p.BaseRefName
 }
 
 // Ref is "owner/repo#123".
